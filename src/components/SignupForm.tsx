@@ -1,5 +1,6 @@
 "use client";
 
+import CustomFileUploader from "./Forms/CustomFileUploader";
 import CustomForm from "./Forms/CustomForm";
 import CustomInput from "./Forms/CustomInput";
 import { Button } from "./ui/button";
@@ -33,6 +34,7 @@ export default function SignupForm() {
         <CustomInput name="lastName" type="text" label="Last name" />
         <CustomInput name="email" type="email" label="Email" />
         <CustomInput name="phone" type="text" label="Phone" />
+        <CustomFileUploader name="files" label="Upload files" multiple />
         <Button type="submit">Submit</Button>
       </CustomForm>
     </div>
