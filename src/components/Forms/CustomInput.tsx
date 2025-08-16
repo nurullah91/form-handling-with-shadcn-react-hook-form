@@ -1,4 +1,4 @@
-import { Input } from "@/src/components/ui/input"; // Assuming you are using ShadCN's Input component
+import { Input } from "@/components/ui/input"; // Assuming you are using ShadCN's Input component
 import { useEffect } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 
