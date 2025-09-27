@@ -70,7 +70,7 @@ const CustomFileUploader = ({
   };
 
   return (
-    <div className={`mb-4 ${className || ""}`}>
+    <div className={`${className || ""}`}>
       {label && <p className="mb-2 font-medium text-lg">{label}</p>}
 
       <div

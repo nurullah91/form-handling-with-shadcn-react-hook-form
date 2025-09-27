@@ -20,7 +20,7 @@ const CustomRichTextEditor = ({
   const { control, getValues } = useFormContext();
 
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
+    <div className={cn(className)}>
       <Controller
         name={name}
         control={control}

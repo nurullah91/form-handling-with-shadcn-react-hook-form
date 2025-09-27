@@ -26,7 +26,7 @@ const CustomTextarea = ({
   } = useFormContext();
 
   return (
-    <div className="mb-5">
+    <div>
       <Controller
         name={name}
         rules={{ required: required ? "This field is required" : false }}

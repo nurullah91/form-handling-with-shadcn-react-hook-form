@@ -24,7 +24,7 @@ const RichTextEditor: React.FC<MYTextEditorProps> = ({
 }) => {
   return (
     <div className="text-editor-container">
-      <label htmlFor={name} className="block text-sm font-medium text-gray-700">
+      <label htmlFor={name} className="text-lg font-semibold block mb-1">
         {label} {required && <span style={{ color: "red" }}>*</span>}
       </label>
 

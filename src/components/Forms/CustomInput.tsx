@@ -42,7 +42,7 @@ const CustomInput = ({
   }, [name, type]);
 
   return (
-    <div style={{ marginBottom: "20px" }}>
+    <div>
       <Controller
         name={name}
         rules={{ required: required ? "This field is required" : false }}

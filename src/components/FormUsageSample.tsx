@@ -52,39 +52,45 @@ export default function FormUsageSample() {
         Form Usage Sample
       </h1>
       <CustomForm onSubmit={onSubmit} defaultValues={defaultValues}>
-        {/* Input */}
-        <CustomInput name="firstName" type="text" label="First name" />
-        <CustomInput name="lastName" type="text" label="Last name" />
-        <CustomInput name="email" type="email" label="Email" />
-        <CustomInput name="phone" type="text" label="Phone" />
+        <div className="grid grid-cols-1 gap-4">
+          {/* Input */}
+          <CustomInput name="firstName" type="text" label="First name" />
+          <CustomInput name="lastName" type="text" label="Last name" />
+          <CustomInput name="email" type="email" label="Email" />
+          <CustomInput name="phone" type="text" label="Phone" />
 
-        {/* Textarea */}
-        <CustomTextarea name="Details" label="Details" />
+          {/* Textarea */}
+          <CustomTextarea name="Details" label="Details" />
 
-        {/* Date */}
-        <CustomDatePicker name="dateOfBirth" label="Date of Birth" />
+          {/* Date */}
+          <CustomDatePicker name="dateOfBirth" label="Date of Birth" />
 
-        {/* Select and multi select */}
-        <CustomSelect
-          name="country"
-          label="Select Country"
-          placeholder="Choose a country"
-          required
-          options={countryOptions}
-        />
-        <CustomMultiSelect
-          name="skills"
-          label="Select Your Skills"
-          required
-          options={skillsOptions}
-        />
+          {/* Select and multi select */}
+          <CustomSelect
+            name="country"
+            label="Select Country"
+            placeholder="Choose a country"
+            required
+            options={countryOptions}
+          />
+          <CustomMultiSelect
+            name="skills"
+            label="Select Your Skills"
+            required
+            options={skillsOptions}
+          />
 
-        {/* Text editor */}
-        <CustomRichTextEditor name="description" label="Description" required />
+          {/* Text editor */}
+          <CustomRichTextEditor
+            name="description"
+            label="Description"
+            required
+          />
 
-        {/* File uploader */}
-        <CustomFileUploader name="files" label="Upload files" multiple />
-        <Button type="submit">Submit</Button>
+          {/* File uploader */}
+          <CustomFileUploader name="files" label="Upload files" multiple />
+          <Button type="submit">Submit</Button>
+        </div>
       </CustomForm>
     </div>
   );
