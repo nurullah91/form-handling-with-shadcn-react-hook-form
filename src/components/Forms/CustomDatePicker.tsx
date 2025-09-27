@@ -66,12 +66,11 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
                 selected={field.value ? new Date(field.value) : undefined}
                 onSelect={(date) => {
                   field.onChange(date);
-                  setOpen(false); // ✅ date select করলে calendar বন্ধ হবে
+                  setOpen(false); //  off calendar after date select
                 }}
-                initialFocus
                 captionLayout="dropdown"
                 startMonth={new Date(2000, 0)}
-                endMonth={new Date(2050, 0)}
+                endMonth={new Date(2050, 11)}
               />
             </PopoverContent>
           </Popover>

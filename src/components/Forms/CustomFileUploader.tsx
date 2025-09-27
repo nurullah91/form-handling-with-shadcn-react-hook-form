@@ -91,24 +91,29 @@ const CustomFileUploader = ({
       </div>
 
       {(files.length > 0 || filePreviews.length > 0) && (
-        <div className="mt-4 space-y-4">
-          {files.map((file, idx) => {
-            const preview = filePreviews[idx];
-            return file.type.startsWith("image/") && preview ? (
-              <Image
-                key={idx}
-                src={preview}
-                alt={`preview-${idx}`}
-                width={200}
-                height={200}
-                className="rounded-md"
-              />
-            ) : (
-              <div key={idx} className="p-2 bg-gray-100 border rounded text-sm">
-                📄 {file.name}
-              </div>
-            );
-          })}
+        <div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-3">
+            {files.map((file, idx) => {
+              const preview = filePreviews[idx];
+              return file.type.startsWith("image/") && preview ? (
+                <Image
+                  key={idx}
+                  src={preview}
+                  alt={`preview-${idx}`}
+                  width={200}
+                  height={200}
+                  className="rounded-md"
+                />
+              ) : (
+                <div
+                  key={idx}
+                  className="p-2 bg-gray-100 border rounded text-sm"
+                >
+                  📄 {file.name}
+                </div>
+              );
+            })}
+          </div>
 
           <button
             type="button"

@@ -18,7 +18,7 @@ export default function SignupForm() {
   };
 
   return (
-    <div>
+    <div className="w-full lg:w-2/3 mx-auto">
       <h1
         style={{
           fontWeight: "bold",
@@ -27,7 +27,7 @@ export default function SignupForm() {
           fontSize: "1.875rem",
         }}
       >
-        This is SignupForm component
+        Sign up sample
       </h1>
       <CustomForm onSubmit={onSubmit} defaultValues={defaultValues}>
         <CustomInput name="firstName" type="text" label="First name" />

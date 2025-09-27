@@ -43,7 +43,7 @@ const CustomMultiSelect = ({
             {...field}
             isMulti
             options={options}
-            className="react-select-container"
+            className="react-select-container z-50"
             classNamePrefix="react-select"
             onChange={(val: MultiValue<TSelectOption>) =>
               field.onChange(val.map((v) => v.value))
