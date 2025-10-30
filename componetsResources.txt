@@ -1,0 +1,933 @@
+///////////////////////////////-------------- Custom Form --------------///////////////////////////////
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { ReactNode } from "react";
+import {
+  useForm,
+  SubmitHandler,
+  FieldValues,
+  FormProvider,
+} from "react-hook-form";
+import { toast } from "sonner";
+
+type TFormConfig = {
+  defaultValues?: Record<string, any>;
+  resolver?: any;
+  className?: string;
+};
+
+type TFormProps = {
+  onSubmit: SubmitHandler<FieldValues>;
+  children: ReactNode;
+  defaultValues?: Record<string, any>; // Ensure this is passed to initialize form state
+} & TFormConfig;
+
+const CustomForm = ({
+  onSubmit,
+  children,
+  defaultValues,
+  resolver,
+  className,
+}: TFormProps) => {
+  // Configure React Hook Form with passed props
+  const formConfig: TFormConfig = {};
+  if (defaultValues) formConfig.defaultValues = defaultValues;
+  if (resolver) formConfig.resolver = resolver;
+
+  const methods = useForm(formConfig);
+
+  const submit: SubmitHandler<FieldValues> = async (data) => {
+    try {
+      await onSubmit(data);
+      methods.reset(); // Optional: Reset form after submit
+    } catch {
+      toast.error("Error submitting form:");
+    }
+  };
+
+  return (
+    <FormProvider {...methods}>
+      <form className={className} onSubmit={methods.handleSubmit(submit)}>
+        {children}
+      </form>
+    </FormProvider>
+  );
+};
+
+export default CustomForm;
+
+
+//////////------------- Custom Input -------------///////////
+import { Input } from "@/components/ui/input"; // Assuming you are using ShadCN's Input component
+import { Eye, EyeOff } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Controller, useFormContext } from "react-hook-form";
+
+type TInputProps = {
+  type: string;
+  name: string;
+  label?: string;
+  disabled?: boolean;
+  required?: boolean;
+  placeholder?: string;
+  className?: string;
+};
+
+const CustomInput = ({
+  type,
+  name,
+  label,
+  disabled,
+  required,
+  placeholder,
+  className,
+}: TInputProps) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const typeToShow = showPassword ? "text" : "password";
+
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext();
+
+  useEffect(() => {
+    if (type === "number") {
+      const inputElement = document.getElementById(name);
+      if (inputElement) {
+        inputElement.addEventListener("wheel", (e) => e.preventDefault(), {
+          passive: false,
+        });
+      }
+    }
+  }, [name, type]);
+
+  return (
+    <div>
+      <Controller
+        name={name}
+        rules={{ required: required ? "This field is required" : false }}
+        control={control}
+        render={({ field }) => (
+          <div className={`relative ${className || ""}`}>
+            {label && (
+              <label htmlFor={name} className="text-lg font-semibold">
+                {label}
+              </label>
+            )}
+
+            {/* Use value from field */}
+            <Input
+              {...field}
+              type={type === "password" ? typeToShow : type}
+              id={name}
+              className="w-full" // Ensure w-full is applied here
+              placeholder={placeholder}
+              disabled={disabled}
+              min={type === "number" ? 0 : undefined}
+              step={type === "number" ? 0.01 : undefined} // Allow decimal points
+            />
+            {type === "password" && (
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            )}
+            {errors && (
+              <small style={{ color: "red" }}>
+                {errors?.[name]?.message as string}
+              </small>
+            )}
+          </div>
+        )}
+      />
+    </div>
+  );
+};
+
+export default CustomInput;
+
+
+///////////-------------- Custom Date Picker -----------////////
+
+"use client";
+
+import * as React from "react";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { Controller, useFormContext } from "react-hook-form";
+
+interface CustomDatePickerProps {
+  name: string;
+  label?: string;
+  required?: boolean;
+  className?: string;
+}
+
+const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
+  name,
+  label,
+  required,
+  className,
+}) => {
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext();
+
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <div className={className || ""}>
+      {label && (
+        <label htmlFor={name} className="text-lg font-semibold">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
+
+      <Controller
+        name={name}
+        rules={{ required: required ? "This field is required" : false }}
+        control={control}
+        render={({ field }) => (
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                className={`w-full justify-start text-left font-normal ${
+                  !field.value && "text-muted-foreground"
+                }`}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {field.value
+                  ? format(new Date(field.value), "PPP")
+                  : "Pick a date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={field.value ? new Date(field.value) : undefined}
+                onSelect={(date) => {
+                  field.onChange(date);
+                  setOpen(false); //  off calendar after date select
+                }}
+                captionLayout="dropdown"
+                startMonth={new Date(2000, 0)}
+                endMonth={new Date(2050, 11)}
+              />
+            </PopoverContent>
+          </Popover>
+        )}
+      />
+
+      {errors?.[name] && (
+        <small className="text-red-500">
+          {errors?.[name]?.message as string}
+        </small>
+      )}
+    </div>
+  );
+};
+
+export default CustomDatePicker;
+
+
+///////// ----------- Custom File uploader ------------ ///////////
+
+"use client";
+
+import Image from "next/image";
+import { useState, useEffect } from "react";
+import { Controller, useFormContext } from "react-hook-form";
+import { useDropzone, Accept } from "react-dropzone";
+
+type TCustomFileUploaderProps = {
+  name: string;
+  label?: string;
+  multiple?: boolean;
+  accept?: Accept;
+  className?: string;
+};
+
+const CustomFileUploader = ({
+  name,
+  label,
+  multiple = false,
+  accept = {
+    "image/*": [],
+    "application/pdf": [],
+    "video/*": [],
+    "audio/*": [],
+  },
+  className,
+}: TCustomFileUploaderProps) => {
+  const {
+    control,
+    setValue,
+    formState: { errors },
+  } = useFormContext();
+  const [files, setFiles] = useState<File[]>([]);
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
+
+  const onDrop = (acceptedFiles: File[]) => {
+    setFiles(multiple ? acceptedFiles : [acceptedFiles[0]]);
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    multiple,
+    accept,
+  });
+
+  // 🔄 Sync selected files with react-hook-form
+  useEffect(() => {
+    if (files.length > 0) {
+      setValue(name, multiple ? files : files[0]);
+      const previews = files.map((file) =>
+        file.type.startsWith("image/") ? URL.createObjectURL(file) : ""
+      );
+      setFilePreviews(previews);
+    } else {
+      setValue(name, multiple ? [] : null);
+      setFilePreviews([]);
+    }
+
+    // Cleanup previews on unmount
+    return () => {
+      filePreviews.forEach((url) => URL.revokeObjectURL(url));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [files, name, setValue, multiple]);
+
+  const removeFiles = () => {
+    filePreviews.forEach((url) => URL.revokeObjectURL(url));
+    setFiles([]);
+    setFilePreviews([]);
+  };
+
+  return (
+    <div className={`${className || ""}`}>
+      {label && <p className="mb-2 font-medium text-lg">{label}</p>}
+
+      <div
+        {...getRootProps()}
+        className={`border border-dashed border-gray-400 p-6 rounded-md text-center cursor-pointer transition ${
+          isDragActive ? "bg-blue-100" : "bg-gray-50"
+        }`}
+      >
+        <input {...getInputProps()} />
+        <p>
+          {isDragActive
+            ? "Drop the files here ..."
+            : "Click or drag & drop files here"}
+        </p>
+        <em className="text-sm text-gray-500">
+          (Supports image, pdf, video, audio)
+        </em>
+      </div>
+
+      {(files.length > 0 || filePreviews.length > 0) && (
+        <div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-3">
+            {files.map((file, idx) => {
+              const preview = filePreviews[idx];
+              return file.type.startsWith("image/") && preview ? (
+                <Image
+                  key={idx}
+                  src={preview}
+                  alt={`preview-${idx}`}
+                  width={200}
+                  height={200}
+                  className="rounded-md"
+                />
+              ) : (
+                <div
+                  key={idx}
+                  className="p-2 bg-gray-100 border rounded text-sm"
+                >
+                  📄 {file.name}
+                </div>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={removeFiles}
+            className="mt-2 px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+          >
+            Remove File{multiple && "s"}
+          </button>
+        </div>
+      )}
+
+      {/* Optional: show validation error */}
+      <Controller
+        name={name}
+        control={control}
+        render={() => <></>} // Return a valid element
+      />
+      {errors[name] && (
+        <p className="text-sm text-red-500 mt-2">
+          {(errors[name] as { message?: string })?.message}
+        </p>
+      )}
+    </div>
+  );
+};
+
+export default CustomFileUploader;
+
+
+////////------- Custom Multi select ---------//////////
+
+"use client";
+
+import Select, { MultiValue } from "react-select";
+import { Controller, useFormContext } from "react-hook-form";
+
+type TSelectOption = {
+  label: string;
+  value: string;
+};
+
+type TCustomMultiSelectProps = {
+  name: string;
+  label?: string;
+  options: TSelectOption[];
+  required?: boolean;
+  className?: string;
+};
+
+const CustomMultiSelect = ({
+  name,
+  label,
+  options,
+  required = false,
+  className,
+}: TCustomMultiSelectProps) => {
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext<{ [key: string]: string[] }>(); // value is always string[]
+
+  return (
+    <div className={className}>
+      {label && (
+        <label className="text-lg font-semibold block mb-1">{label}</label>
+      )}
+
+      <Controller
+        name={name}
+        control={control}
+        rules={{ required: required ? "This field is required" : false }}
+        render={({ field }) => (
+          <Select
+            {...field}
+            isMulti
+            options={options}
+            className="react-select-container z-50"
+            classNamePrefix="react-select"
+            onChange={(val: MultiValue<TSelectOption>) =>
+              field.onChange(val.map((v) => v.value))
+            }
+            value={options.filter((opt) => field.value?.includes(opt.value))}
+          />
+        )}
+      />
+
+      {errors[name] && (
+        <small className="text-red-500">{errors[name]?.message}</small>
+      )}
+    </div>
+  );
+};
+
+export default CustomMultiSelect;
+
+
+
+////////--------- CustomRadioGroup.tsx ----------//////////
+
+"use client";
+
+import { Label } from "@/components/ui/label";
+import {
+  RadioGroup as ShadCNRadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
+import { Controller, useFormContext } from "react-hook-form";
+import { cn } from "@/lib/utils";
+
+type TRadioOption = {
+  label: string;
+  value: string;
+};
+
+type CustomRadioGroupProps = {
+  name: string;
+  label?: string;
+  options: TRadioOption[];
+  required?: boolean;
+  className?: string;
+  disabled?: boolean;
+};
+
+const CustomRadioGroup = ({
+  name,
+  label,
+  options,
+  required,
+  className,
+  disabled = false,
+}: CustomRadioGroupProps) => {
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext();
+
+  return (
+    <div className={cn("space-y-2", className)}>
+      {label && (
+        <label htmlFor={name} className="text-lg font-semibold">
+          {label}
+          {required && <span className="text-red-500"> *</span>}
+        </label>
+      )}
+
+      <Controller
+        name={name}
+        control={control}
+        rules={{
+          required: required ? `${label || name} is required` : false,
+        }}
+        render={({ field: { onChange, value, ref } }) => (
+          <ShadCNRadioGroup
+            onValueChange={onChange}
+            value={value ?? ""} // ✅ Prevents "undefined" → controlled error
+            ref={ref}
+            disabled={disabled}
+            className="flex flex-wrap gap-2"
+          >
+            {options.map((option) => (
+              <div key={option.value} className="flex items-center space-x-2">
+                <RadioGroupItem
+                  value={option.value}
+                  id={`${name}-${option.value}`}
+                  disabled={disabled}
+                />
+                <Label
+                  htmlFor={`${name}-${option.value}`}
+                  className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {option.label}
+                </Label>
+              </div>
+            ))}
+          </ShadCNRadioGroup>
+        )}
+      />
+
+      {errors[name] && (
+        <small className="mt-1 block text-sm text-red-500">
+          {errors[name]?.message as string}
+        </small>
+      )}
+    </div>
+  );
+};
+
+export default CustomRadioGroup;
+
+
+///////// --------- CustomRichTextEdito.tsx ----------//////////
+"use client";
+
+import { Controller, useFormContext } from "react-hook-form";
+import { cn } from "@/lib/utils";
+import RichTextEditor from "./RichTextEditor";
+
+interface CustomRichTextEditorProps {
+  name: string;
+  label?: string;
+  required?: boolean;
+  className?: string;
+}
+
+const CustomRichTextEditor = ({
+  name,
+  label,
+  required = false,
+  className,
+}: CustomRichTextEditorProps) => {
+  const { control, getValues } = useFormContext();
+
+  return (
+    <div className={cn(className)}>
+      <Controller
+        name={name}
+        control={control}
+        defaultValue={getValues(name) ?? ""}
+        rules={required ? { required: `${label ?? name} is required` } : {}}
+        render={({ field, fieldState: { error } }) => (
+          <div>
+            <RichTextEditor
+              name={name}
+              label={label ?? name}
+              content={field.value ?? ""}
+              onChangeHandler={(content) => field.onChange(content)}
+            />
+            {error && (
+              <small className="text-red-500 text-xs mt-1 block">
+                {error.message}
+              </small>
+            )}
+          </div>
+        )}
+      />
+    </div>
+  );
+};
+
+export default CustomRichTextEditor;
+
+
+/////////////////------ CustomSelect.tsx ----------/////////////
+"use client";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Controller, useFormContext } from "react-hook-form";
+
+type TSelectOption = {
+  label: string;
+  value: string;
+};
+
+type TCustomSelectProps = {
+  name: string;
+  label?: string;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  options: TSelectOption[];
+  className?: string;
+};
+
+const CustomSelect = ({
+  name,
+  label,
+  placeholder = "Select an option",
+  required,
+  disabled,
+  options,
+  className,
+}: TCustomSelectProps) => {
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext();
+
+  return (
+    <div>
+      <Controller
+        name={name}
+        control={control}
+        rules={{ required: required ? "This field is required" : false }}
+        render={({ field }) => (
+          <div className={`${className || ""}`}>
+            {label && (
+              <label htmlFor={name} className="text-lg font-semibold">
+                {label}
+              </label>
+            )}
+
+            <Select
+              onValueChange={field.onChange}
+              defaultValue={field.value}
+              disabled={disabled}
+            >
+              <SelectTrigger className="w-full" id={name}>
+                <SelectValue placeholder={placeholder} />
+              </SelectTrigger>
+              <SelectContent>
+                {options.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {errors?.[name] && (
+              <small style={{ color: "red" }}>
+                {errors?.[name]?.message as string}
+              </small>
+            )}
+          </div>
+        )}
+      />
+    </div>
+  );
+};
+
+export default CustomSelect;
+
+////////------ CustomTextarea.tsx -----//////////
+import { useFormContext, Controller } from "react-hook-form";
+import { Textarea } from "../ui/textarea";
+
+type TTextareaProps = {
+  name: string;
+  label?: string;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  rows?: number;
+  className?: string;
+};
+
+const CustomTextarea = ({
+  name,
+  label,
+  placeholder,
+  required,
+  disabled,
+  rows = 4, // default to 4 rows if not passed
+  className,
+}: TTextareaProps) => {
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext();
+
+  return (
+    <div>
+      <Controller
+        name={name}
+        rules={{ required: required ? "This field is required" : false }}
+        control={control}
+        render={({ field }) => (
+          <div className={className}>
+            {label && (
+              <label
+                htmlFor={name}
+                className="text-lg font-semibold block mb-1"
+              >
+                {label}
+              </label>
+            )}
+
+            <Textarea
+              {...field}
+              id={name}
+              placeholder={placeholder}
+              disabled={disabled}
+              rows={rows}
+              className="w-full"
+            />
+
+            {errors?.[name]?.message && (
+              <small className="text-red-500">
+                {errors[name]?.message as string}
+              </small>
+            )}
+          </div>
+        )}
+      />
+    </div>
+  );
+};
+
+export default CustomTextarea;
+
+
+///////------- RichTextEditor.tsx ---------/////////
+"use client";
+import React from "react";
+import SunEditor from "suneditor-react";
+import "suneditor/dist/css/suneditor.min.css";
+import "katex/dist/katex.min.css";
+import katex from "katex";
+
+import "./RichTextEditorStyle.css";
+
+interface MYTextEditorProps {
+  name: string;
+  label: string;
+  required?: boolean;
+  content: string;
+  onChangeHandler: (content: string) => void;
+}
+
+const RichTextEditor: React.FC<MYTextEditorProps> = ({
+  name,
+  label,
+  required,
+  content,
+  onChangeHandler,
+}) => {
+  return (
+    <div className="text-editor-container">
+      <label htmlFor={name} className="text-lg font-semibold block mb-1">
+        {label} {required && <span style={{ color: "red" }}>*</span>}
+      </label>
+
+      <div>
+        <SunEditor
+          setContents={content}
+          onChange={(content) => onChangeHandler(content)}
+          setOptions={{
+            height: "100vh",
+            width: "100%",
+            buttonList: [
+              [
+                "undo",
+                "redo",
+                "bold",
+                "italic",
+                "underline",
+                "strike",
+                "subscript",
+                "superscript",
+              ],
+              ["list", "outdent", "indent"],
+              ["align"],
+              ["font", "fontSize", "formatBlock"],
+              ["fontColor", "hiliteColor"],
+              ["removeFormat"],
+              [
+                "link",
+                "audio",
+                "math",
+                "table",
+                "horizontalRule",
+                "blockquote",
+                "codeView",
+              ],
+              ["fullScreen", "showBlocks", "preview", "print"],
+              ["lineHeight", "paragraphStyle", "textStyle"],
+              ["dir_ltr", "dir_rtl"],
+            ],
+            font: [
+              "Arial",
+              "Comic Sans MS",
+              "Courier New",
+              "Impact",
+              "Georgia",
+              "Tahoma",
+              "Trebuchet MS",
+              "Verdana",
+              "Roboto",
+            ],
+            fontSize: [
+              8, 10, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 48, 64, 72,
+            ],
+
+            katex: katex,
+          }}
+          placeholder="Enter description here..."
+        />
+      </div>
+    </div>
+  );
+};
+
+export default RichTextEditor;
+
+//////---------- RichTextEditoStyle.css --------//////////
+
+.editor-container {
+  width: 100vw;
+  margin: 20px;
+  padding: 20px;
+  background-color: #f0f4f8;
+  border-radius: 10px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.title {
+  text-align: center;
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.input-label {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.blog-title,
+.blog-type {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  transition: border-color 0.3s;
+}
+
+.blog-title:focus,
+.blog-type:focus {
+  border-color: #007bff;
+}
+
+.save-blog-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-top: 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.save-blog-btn:hover {
+  background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .editor-container {
+    padding: 15px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .save-blog-btn {
+    font-size: 16px;
+  }
+}
+

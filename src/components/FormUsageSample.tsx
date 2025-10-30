@@ -1,5 +1,6 @@
 "use client";
 
+import z from "zod";
 import CustomDatePicker from "./Forms/CustomDatePicker";
 import CustomFileUploader from "./Forms/CustomFileUploader";
 import CustomForm from "./Forms/CustomForm";
@@ -9,6 +10,44 @@ import CustomRichTextEditor from "./Forms/CustomRichTextEditor";
 import CustomSelect from "./Forms/CustomSelect";
 import CustomTextarea from "./Forms/CustomTextarea";
 import { Button } from "./ui/button";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+// 🧩 Define the Zod schema
+const formSchema = z.object({
+  firstName: z
+    .string()
+    .min(2, "First name must be at least 2 characters")
+    .max(50, "First name must be less than 50 characters"),
+  lastName: z
+    .string()
+    .min(2, "Last name must be at least 2 characters")
+    .max(50, "Last name must be less than 50 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  phone: z
+    .string()
+    .regex(/^[0-9+\-()\s]*$/, "Invalid phone number")
+    .optional()
+    .or(z.literal("")),
+  Details: z.string().optional(),
+  dateOfBirth: z
+    .date("Date of birth is required")
+    .or(z.string().pipe(z.coerce.date())),
+  country: z.string().nonempty("Please select a country"),
+  skills: z.array(z.string()).min(1, "Please select at least one skill"),
+  description: z
+    .string()
+    .min(10, "Description must be at least 10 characters long"),
+  files: z
+    .array(
+      z
+        .any()
+        .refine(
+          (file) => file instanceof File,
+          "Each uploaded item must be a valid file"
+        )
+    )
+    .optional(),
+});
 
 export default function FormUsageSample() {
   const onSubmit = (data: object) => {
@@ -51,7 +90,11 @@ export default function FormUsageSample() {
       >
         Form Usage Sample
       </h1>
-      <CustomForm onSubmit={onSubmit} defaultValues={defaultValues}>
+      <CustomForm
+        onSubmit={onSubmit}
+        defaultValues={defaultValues}
+        resolver={zodResolver(formSchema)}
+      >
         <div className="grid grid-cols-1 gap-4">
           {/* Input */}
           <CustomInput name="firstName" type="text" label="First name" />
